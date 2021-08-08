@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Common;
 
 namespace Server
 {
@@ -15,6 +16,8 @@ namespace Server
             socket.Listen(128);
 
             _ = Task.Run(() => HandleConnectionQueue(socket));
+
+            Console.ReadLine();
         }
 
         private static async Task HandleConnectionQueue(Socket socket)
@@ -25,7 +28,12 @@ namespace Server
                     .FromAsync(socket.BeginAccept, socket.EndAccept, null);
                 
                 Console.WriteLine("Socket Server :: Client Connected");
-                
+
+                var networkStream = new NetworkStream(clientSocket);
+                var protocol = new JsonProtocol();
+                var message = await protocol.Receive<Message>(networkStream);
+                await protocol.Send(networkStream, message);
+
             } while (true);
         }
     }
