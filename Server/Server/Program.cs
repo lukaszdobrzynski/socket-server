@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading.Tasks;
 
 namespace Server
 {
@@ -6,7 +9,24 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            var endpoint = new IPEndPoint(IPAddress.Loopback, 9000);
+            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.Bind(endpoint);
+            socket.Listen(128);
+
+            _ = Task.Run(() => HandleConnectionQueue(socket));
+        }
+
+        private static async Task HandleConnectionQueue(Socket socket)
+        {
+            do
+            {
+                var clientSocket = await Task.Factory
+                    .FromAsync(socket.BeginAccept, socket.EndAccept, null);
+                
+                Console.WriteLine("Socket Server :: Client Connected");
+                
+            } while (true);
         }
     }
 }
