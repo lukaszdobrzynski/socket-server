@@ -25,7 +25,8 @@ namespace Client
 
             var message = new Message
             {
-                Payload = "Hello from Echo Server!"
+                Payload = "Hello from Echo Server!",
+                Route = "api/heartbeat"
             };
 
             while (true)
@@ -33,6 +34,7 @@ namespace Client
                 await _channel.Send(JObject.FromObject(message));
                 await Task.Delay(3000);
             }
+            
             Console.ReadLine();
         }
     }

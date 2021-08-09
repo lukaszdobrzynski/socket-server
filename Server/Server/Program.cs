@@ -9,10 +9,10 @@ namespace Server
 {
     class Program
     {
-        private static Channel<JsonProtocol, JObject> _channel = new Channel<JsonProtocol, JObject>();
-        
+        private static JsonMessageDispatcher _messageDispatcher = new JsonMessageDispatcher();
         static void Main(string[] args)
         {
+            _messageDispatcher.Register<Message, Message>(ReportHeartbeat);
             
             var endpoint = new IPEndPoint(IPAddress.Loopback, 9000);
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -32,11 +32,18 @@ namespace Server
                     .FromAsync(socket.BeginAccept, socket.EndAccept, null);
                 
                 Console.WriteLine("Socket Server :: Client Connected");
-
-                _channel.Attach(clientSocket);
-                _channel.OnMessage( async (jObject) => await _channel.Send(jObject));
+                
+                var channel = new Channel<JsonProtocol, JObject>();
+                channel.Attach(clientSocket);
+                _messageDispatcher.Bind(channel);
                 
             } while (true);
+        }
+
+        [Route("api/heartbeat")]
+        private static Task<Message> ReportHeartbeat(Message message)
+        {
+            return Task.FromResult(message);
         }
     }
 }
